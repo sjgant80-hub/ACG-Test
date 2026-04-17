@@ -1,2 +1,109 @@
-# ACG-Test
-ACG test standard
+# ACG-TEST
+
+Konomi Standard · UDT-nested architecture for GitHub Actions testing.
+AI Craftspeople Guild · v1.0 · April 2026.
+
+This repo is both the reference documentation for the standard AND a
+GitHub Pages site that applies the standard to itself — every page has a
+`.test.yml` file, and the runner verifies each step of the build process.
+
+## Layout
+
+```
+/
+├── index.html                          entry point (GitHub Pages serves this)
+├── pages/
+│   ├── standard.html                   the full standard
+│   ├── types.html                      per-UDT reference with live elements
+│   ├── example.html                    article-notification rendered as UDTs
+│   └── runner.html                     in-browser test dashboard
+├── assets/
+│   ├── style.css                       shared styles
+│   ├── udt-elements.js                 custom elements: <udt-expectation> etc.
+│   └── test-runner.js                  loads manifest, runs every .test.yml
+├── tests/
+│   ├── manifest.json                   list of test files
+│   ├── index.test.yml                  one test per page
+│   ├── standard.test.yml
+│   ├── types.test.yml
+│   ├── example.test.yml
+│   ├── runner.test.yml
+│   ├── deploy-pages.test.yml           canonical workflow test
+│   └── process.test.yml                meta: every step has a verdict
+├── .github/workflows/
+│   └── deploy-pages.yml                publishes the site
+├── acg-test.config.yml                 runner config + extension notes
+└── README.md
+```
+
+## UDT custom elements
+
+Each type in the standard has a matching custom element, usable in any HTML:
+
+```html
+<udt-expectation expect="present" reason="..."></udt-expectation>
+<udt-eventtrigger event="pull_request" types="opened" expect="triggered" reason="..."></udt-eventtrigger>
+<udt-pathwatch path="articles/**" expect="triggered" reason="..."></udt-pathwatch>
+<udt-guardrail condition="PR is a draft" reason="..."></udt-guardrail>
+<udt-secret name="EMAIL_USERNAME" reason="..."></udt-secret>
+<udt-notification type="email">
+  <udt-field name="recipient" address="..." expect="present" reason="..."></udt-field>
+</udt-notification>
+<udt-workflowtest test="..." workflow="...">
+  ...
+</udt-workflowtest>
+```
+
+Every expectation-bearing element requires a `reason` attribute. The reason
+IS the documentation — if a human can't read it and understand why the check
+matters, the test is wrong.
+
+## Running tests in the browser
+
+Open the site via GitHub Pages (or any static server) and visit
+`pages/runner.html`. The runner:
+
+1. loads `tests/manifest.json`
+2. fetches each `.test.yml`, parses it
+3. fetches the target page / file
+4. evaluates every expectation (watches, secrets, guardrails)
+5. renders pass / fail / skip per the standard's three-result vocabulary
+
+Results flow into `#site-summary` on every page and `#test-list` on the
+runner page. The process-steps panel on the runner page shows the TDD phases
+(scaffold → fail → write → pass → commit) and their live verdicts.
+
+## Running tests from the CLI
+
+The standard defines the following commands (section 10 of the spec):
+
+```
+acg-test run <file>              run one test file
+acg-test run tests/              run all tests in folder
+acg-test init <workflow-name>    scaffold a blank test file
+acg-test validate <file>         check test YAML structure only
+acg-test report                  summary of all tests across repo
+```
+
+The in-browser runner in this repo is the reference implementation of the
+test-evaluation semantics. A CLI implementation can be produced from the
+same YAML files without modification.
+
+## Local preview
+
+```
+python3 -m http.server 8080
+```
+
+then open <http://localhost:8080/>.
+
+## Design rules
+
+1. Every expectation has a reason.
+2. Four words only: `present`, `triggered`, `not triggered`, `configured`.
+3. Three results only: `pass`, `fail`, `skip`.
+4. Tests before code.
+5. UDT inheritance — every type traces back to `UDT:Expectation`.
+6. One test file, one workflow. One test file, one page.
+
+> if you can read English, you can read the test
