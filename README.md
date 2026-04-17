@@ -16,11 +16,14 @@ GitHub Pages site that applies the standard to itself — every page has a
 │   ├── standard.html                   the full standard
 │   ├── types.html                      per-UDT reference with live elements
 │   ├── example.html                    article-notification rendered as UDTs
-│   └── runner.html                     in-browser test dashboard
+│   ├── runner.html                     in-browser test dashboard
+│   └── terminal.html                   browser-side terminal
 ├── assets/
 │   ├── style.css                       shared styles
 │   ├── udt-elements.js                 custom elements: <udt-expectation> etc.
-│   └── test-runner.js                  loads manifest, runs every .test.yml
+│   ├── runner-core.js                  pure parser + check functions
+│   ├── test-runner.js                  page bootstrap that mounts results
+│   └── terminal.js                     terminal command engine
 ├── tests/
 │   ├── manifest.json                   list of test files
 │   ├── index.test.yml                  one test per page
@@ -28,6 +31,7 @@ GitHub Pages site that applies the standard to itself — every page has a
 │   ├── types.test.yml
 │   ├── example.test.yml
 │   ├── runner.test.yml
+│   ├── terminal.test.yml
 │   ├── deploy-pages.test.yml           canonical workflow test
 │   └── process.test.yml                meta: every step has a verdict
 ├── .github/workflows/
@@ -72,6 +76,30 @@ Open the site via GitHub Pages (or any static server) and visit
 Results flow into `#site-summary` on every page and `#test-list` on the
 runner page. The process-steps panel on the runner page shows the TDD phases
 (scaffold → fail → write → pass → commit) and their live verdicts.
+
+## Browser terminal
+
+Open `pages/terminal.html`. Commands:
+
+```
+help                                show all commands
+ls                                  list local tests in tests/manifest.json
+cat <path>                          show a file from this site
+run                                 run every local test
+run <url-or-path>                   run a single .test.yml from anywhere
+fetch <owner/repo[@ref]> <path>     run a .test.yml from a public GitHub repo
+                                    e.g. fetch teslasolar/acg-test tests/index.test.yml
+target <url>                        fetch any HTML and report basic UDT counts
+paste                               open a textarea, paste YAML, run it
+validate <url-or-path>              parse a test file and report shape only
+init <name>                         print a blank .test.yml scaffold
+report                              re-render the last summary
+clear, history, echo
+```
+
+Cross-origin targets are subject to CORS. `raw.githubusercontent.com` is
+permissive for public repos, so `fetch <owner>/<repo> <path>` works for
+anything you can read on GitHub.
 
 ## Running tests from the CLI
 

@@ -6,6 +6,7 @@
     "tests/types.test.yml",
     "tests/example.test.yml",
     "tests/runner.test.yml",
+    "tests/terminal.test.yml",
     "tests/deploy-pages.test.yml",
     "tests/process.test.yml"
   ]
