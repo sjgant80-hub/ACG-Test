@@ -34,8 +34,15 @@ GitHub Pages site that applies the standard to itself — every page has a
 │   ├── terminal.test.yml
 │   ├── deploy-pages.test.yml           canonical workflow test
 │   └── process.test.yml                meta: every step has a verdict
-├── .github/workflows/
-│   └── deploy-pages.yml                publishes the site
+├── paper-auto-index-standard.html      Guild paper (has acg-paper frontmatter)
+├── papers.json                         machine-readable paper index (generated)
+├── white-papers.html                   human-readable paper index (generated)
+├── .github/
+│   ├── workflows/
+│   │   ├── deploy-pages.yml            publishes the site
+│   │   └── paper-index.yml             auto-indexes papers on PR
+│   └── scripts/
+│       └── parse-papers.js             scan + fill + generate paper index
 ├── acg-test.config.yml                 runner config + extension notes
 └── README.md
 ```
@@ -77,6 +84,23 @@ Results flow into `#site-summary` on every page and `#test-list` on the
 runner page. The process-steps panel on the runner page shows the TDD phases
 (scaffold → fail → write → pass → commit) and their live verdicts.
 
+## Paper auto-index
+
+The repo implements the
+[Paper Auto-Index Standard](paper-auto-index-standard.html) (ACG-STD-AUTOPARSE-2026).
+Every paper at the repo root carries an `acg-paper:` frontmatter block;
+`.github/scripts/parse-papers.js` scans them, fills missing fields, and
+regenerates `papers.json` and `white-papers.html`. The PR workflow
+`.github/workflows/paper-index.yml` runs the parser on every paper change
+and posts a summary comment. The standard indexes itself — the page that
+defines the format is the first entry in the index.
+
+Run the parser locally:
+
+```
+node .github/scripts/parse-papers.js
+```
+
 ## Browser terminal
 
 Open `pages/terminal.html`. Commands:
@@ -94,6 +118,8 @@ paste                               open a textarea, paste YAML, run it
 validate <url-or-path>              parse a test file and report shape only
 init <name>                         print a blank .test.yml scaffold
 report                              re-render the last summary
+papers                              list papers.json
+papers scan <url>                   scan any HTML URL for acg-paper frontmatter
 clear, history, echo
 ```
 

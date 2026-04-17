@@ -56,7 +56,9 @@ export function parseYAML(text) {
       const key = m[1].trim();
       const val = m[2].trim();
       i++;
-      if (val === "") {
+      if (val === ">" || val === "|") {
+        obj[key] = readBlockScalar(val === "|", curIndent);
+      } else if (val === "") {
         const child = parseBlock(curIndent);
         obj[key] = child === null ? null : child;
       } else {
@@ -64,6 +66,28 @@ export function parseYAML(text) {
       }
     }
     return obj;
+  }
+
+  function readBlockScalar(literal, parentIndent) {
+    const parts = [];
+    let blockIndent = -1;
+    while (i < lines.length) {
+      const line = lines[i];
+      const li = indentOf(line);
+      if (li <= parentIndent) break;
+      if (blockIndent === -1) blockIndent = li;
+      parts.push(line.slice(blockIndent));
+      i++;
+    }
+    if (literal) return parts.join("\n");
+    // folded: blank line → newline, otherwise join with space
+    let folded = "";
+    for (let k = 0; k < parts.length; k++) {
+      const p = parts[k];
+      if (p.trim() === "") folded += "\n";
+      else folded += (folded && !folded.endsWith("\n") ? " " : "") + p.trim();
+    }
+    return folded.trim();
   }
 
   return parseBlock(-1);
@@ -252,7 +276,45 @@ async function runParsed(yml, sourceUrl, out) {
     out.totals.skipped++;
   }
 
+  // Optional: output[] — generated files that must exist relative to sourceUrl.
+  for (const o of (yml.output || [])) {
+    const r = await checkOutputFile(o, sourceUrl);
+    out.results.push(r);
+    tally(out.totals, r.result);
+  }
+
+  // Optional: frontmatter.required[] / frontmatter.auto-filled[] — workflow-runtime items.
+  if (yml.frontmatter) {
+    for (const group of ["required", "auto-filled", "autofilled", "auto_filled"]) {
+      for (const f of (yml.frontmatter[group] || [])) {
+        out.results.push({
+          name: `frontmatter.${group}: ${f.field}`,
+          result: "skip",
+          reason: f.reason || "frontmatter rule requires runtime check",
+          expected: f.expect || "configured",
+          actual: "needs runtime check",
+        });
+        out.totals.skipped++;
+      }
+    }
+  }
+
   return out;
+}
+
+async function checkOutputFile(o, sourceUrl) {
+  const name = `output: ${o.file}`;
+  if (!o.file) {
+    return { name, result: "fail", reason: o.reason || "", expected: "present", actual: "missing file field" };
+  }
+  try {
+    const url = resolveAgainst(sourceUrl, o.file);
+    const r = await fetch(url, { method: "GET", cache: "no-store" });
+    if (r.ok) return { name, result: "pass", reason: o.reason || "", expected: "present", actual: "present" };
+    return { name, result: "fail", reason: o.reason || "", expected: "present", actual: `${r.status}` };
+  } catch (_) {
+    return { name, result: "fail", reason: o.reason || "", expected: "present", actual: "unreachable" };
+  }
 }
 
 async function checkExists(exists, targetPath, targetUrl) {

@@ -35,6 +35,10 @@ watches:
     expect: triggered
     reason: "home page must link to the Terminal page"
 
+  - path: "nav.site-nav a[href$='white-papers.html']"
+    expect: triggered
+    reason: "home page must link to the White Papers index"
+
   - path: "section.hero h1"
     expect: triggered
     reason: "hero title must render so the site has a recognisable landing moment"

@@ -285,3 +285,67 @@ dialog#paste-dialog textarea {
   cursor: pointer;
 }
 #paste-run { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* Paper cards */
+.paper-section { margin: 2em 0; }
+.paper-section h2 {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.2em;
+  margin-top: 1.5em;
+}
+article.paper-card {
+  display: block;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  padding: 1.1em 1.25em;
+  margin: 1em 0;
+}
+article.paper-card .paper-meta {
+  display: flex;
+  gap: 1em;
+  flex-wrap: wrap;
+  color: var(--dim);
+  font-size: 0.85em;
+  font-family: var(--mono);
+  margin-bottom: 0.4em;
+}
+article.paper-card .paper-id { margin-left: auto; }
+article.paper-card .paper-type-badge {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  padding: 0.15em 0.6em;
+  border-radius: 4px;
+  font-size: 0.78em;
+  font-family: var(--mono);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-bottom: 0.3em;
+}
+article.paper-card .paper-status-badge {
+  display: inline-block;
+  background: var(--skip);
+  color: #fff;
+  padding: 0.15em 0.6em;
+  border-radius: 4px;
+  font-size: 0.78em;
+  font-family: var(--mono);
+  margin-left: 0.4em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+article.paper-card h3 { margin: 0.2em 0 0.4em; font-size: 1.2em; }
+article.paper-card .paper-abstract { margin: 0 0 0.6em; color: var(--ink); }
+article.paper-card .paper-tags { display: flex; gap: 0.4em; flex-wrap: wrap; margin-bottom: 0.6em; }
+article.paper-card .paper-tags .tag {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.1em 0.7em;
+  font-size: 0.8em;
+  font-family: var(--mono);
+  color: var(--dim);
+}
+article.paper-card .paper-link { font-weight: 700; }

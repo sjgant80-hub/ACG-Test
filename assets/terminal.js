@@ -87,6 +87,7 @@ async function dispatch(line) {
     case "target":    return cmdTarget(arg);
     case "paste":     return cmdPaste();
     case "report":    return cmdReport();
+    case "papers":    return cmdPapers(rest);
     default:          return print(`unknown command: ${cmd} (try 'help')\n`, "fail");
   }
 }
@@ -109,8 +110,46 @@ function cmdHelp() {
   validate <url-or-path>              parse a test file and report shape only
   init <name>                         print a blank .test.yml scaffold
   report                              re-render the last summary
+  papers [scan <url>]                 list the site's papers.json, or scan any
+                                      HTML URL for an acg-paper frontmatter block
 
 `, "info");
+}
+
+async function cmdPapers(rest) {
+  const sub = rest[0];
+  if (sub === "scan") {
+    const url = rest[1];
+    if (!url) return print("usage: papers scan <url>\n", "fail");
+    try {
+      const resolved = resolve(url);
+      const text = await fetchText(resolved);
+      const m = text.match(/<!--\s*([\s\S]*?)-->/);
+      if (!m || !/\bacg-paper\s*:/.test(m[1])) return print("papers scan: no acg-paper frontmatter found\n", "skip");
+      const parsed = parseYAML(m[1]);
+      const paper = parsed && parsed["acg-paper"] ? parsed["acg-paper"] : null;
+      if (!paper) return print("papers scan: frontmatter block present but could not parse\n", "fail");
+      print(`papers scan ${resolved}\n`);
+      for (const k of ["id", "type", "title", "author", "date", "status", "slug"]) {
+        if (paper[k] !== undefined) print(`  ${k.padEnd(9)} ${paper[k]}\n`);
+      }
+      if (paper.tags) print(`  tags      ${Array.isArray(paper.tags) ? paper.tags.join(", ") : paper.tags}\n`);
+      if (paper.abstract) print(`  abstract  ${paper.abstract}\n`);
+      const missing = ["title", "author", "type", "abstract"].filter((f) => !paper[f]);
+      if (missing.length) print(`  missing required: ${missing.join(", ")}\n`, "fail");
+      else print(`  ok — all required fields present\n`, "pass");
+    } catch (e) { print(`papers scan: ${e.message}\n`, "fail"); }
+    return;
+  }
+  try {
+    const text = await fetchText(SITE_BASE + "papers.json");
+    const papers = JSON.parse(text);
+    print(`papers.json — ${papers.length} paper${papers.length === 1 ? "" : "s"} indexed\n`);
+    for (const p of papers) {
+      print(`  ${p.id.padEnd(24)} ${String(p.type).padEnd(14)} ${p.title}\n`, "info");
+      if (p.author || p.date) print(`    ${p.author || "?"} · ${p.date || "?"} · tags: ${(p.tags || []).join(", ") || "(none)"}\n`);
+    }
+  } catch (e) { print(`papers: ${e.message}\n`, "fail"); }
 }
 
 function cmdClear() { out.textContent = ""; }

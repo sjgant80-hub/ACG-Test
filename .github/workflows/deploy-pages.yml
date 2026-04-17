@@ -8,6 +8,9 @@ on:
       - pages/**
       - assets/**
       - tests/**
+      - papers.json
+      - white-papers.html
+      - paper-auto-index-standard.html
       - .github/workflows/deploy-pages.yml
   workflow_dispatch:
 
